@@ -67,6 +67,149 @@
   (collect tree nil))
           
 ;2.29
+(define (make-mobile left right)
+  (list left right))
 
+(define (make-branch len structure)
+  (list len structure))
 
-        
+;a
+(define (left-branch mobile)
+  (car mobile))
+
+(define (right-branch mobile)
+  (cadr mobile))
+
+(define (branch-length branch)
+  (car branch))
+
+(define (branch-structure branch)
+  (cadr branch))
+
+;b
+(define (total-weight mobile)
+  (+ (branch-weight (left-branch mobile))
+     (branch-weight (right-branch mobile))))
+
+(define (branch-weight branch)
+  (let ((struc (branch-structure branch)))
+    (if (not (pair? struc))
+        struc
+        (total-weight struc))))
+
+;c
+(define (is-balanced? mobile)
+  (and (= (torque (left-branch mobile))
+          (torque (right-branch mobile)))
+       (is-balanced-branch? (left-branch mobile))
+       (is-balanced-branch? (right-branch mobile))))
+
+(define (torque branch)
+  (* (branch-length branch)
+     (branch-weight branch)))
+
+(define (is-balanced-branch? branch)
+  (let ((struc (branch-structure branch)))
+    (if (not (pair? struc))
+        true
+        (is-balanced? struc))))
+;2.30
+(define (square-tree tree)
+  (cond ((null? tree) nil)
+        ((not (pair? tree)) (* tree tree))
+        (else (cons (square-tree (car tree))
+                    (square-tree (cdr tree))))))
+
+(define (map-square-tree tree)
+  (map (lambda (x)
+         (if (pair? x)
+             (map-square-tree x)
+             (* x x)))
+       tree))
+
+;2.31
+(define (square x) (* x x))
+
+(define (tree-map func tree)
+  (cond ((null? tree) nil)
+        ((not (pair? tree)) (func tree))
+        (else (cons (tree-map func (car tree))
+                    (tree-map func (cdr tree))))))
+
+;2.32
+(define (subsets s)
+  (if (null? s)
+      (list nil)
+      (let ((rest (subsets (cdr s))))
+        (append rest (map (lambda (x) (cons (car s) x)) rest)))))
+
+;--------------------- thus ends section 2.2.2 ----------------------------
+
+;2.33
+(define (accumulate op initial sequence)
+  (if (null? sequence)
+      initial
+      (op (car sequence)
+          (accumulate op initial (cdr sequence)))))
+
+(define (seqmap p sequence)
+  (accumulate (lambda (x y) (cons (p x) y)) nil sequence))
+
+(define (seqappend seq1 seq2)
+  (accumulate cons seq2 seq1))
+
+(define (seqlength sequence)
+  (accumulate (lambda (x y) (+ 1 y)) 0 sequence))
+
+;2.34
+(define (horner-eval x coefficient-sequence)
+  (accumulate (lambda (this-coeff higher-terms) (+ this-coeff (* x higher-terms)))
+              0
+              coefficient-sequence))
+
+;2.35
+(define (count-leaves tree)
+  (accumulate + 0 (map (lambda (node)
+                         (if (pair? node)
+                             (count-leaves node)
+                             1))
+                       tree)))
+
+;2.36
+(define (accumulate-n op init seqs)
+  (if (null? (car seqs))
+             nil
+             (cons (accumulate op init (map car seqs))
+                   (accumulate-n op init (map cdr seqs)))))
+
+;2.37
+(define (dot-product v w)
+  (accumulate + 0 (map * v w)))
+
+(define (matrix-*-vector m v)
+  (map (lambda (r) (dot-product v r)) m))
+
+(define (transpose mat)
+  (accumulate-n cons nil mat))
+
+(define (matrix-*-matrix m n)
+  (let ((cols (transpose n)))
+    (map (lambda (row) (matrix-*-vector cols row)) m)))
+
+;2.38
+(define (fold-left op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter initial sequence))
+
+; property -> associativity
+
+;2.39
+(define (acc-reverse sequence)
+  (accumulate (lambda (x y) (append y (list x))) nil sequence))
+
+(define (foldl-reverse sequence)
+  (fold-left (lambda (x y) (cons y x)) nil sequence))
