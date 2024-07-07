@@ -213,3 +213,53 @@
 
 (define (foldl-reverse sequence)
   (fold-left (lambda (x y) (cons y x)) nil sequence))
+
+;2.40
+(define (flatmap proc seq)
+  (accumulate append nil (map proc seq)))
+
+(define (enumerate-interval low high)
+  (if (> low high)
+      nil
+      (cons low (enumerate-interval (+ low 1) high))))
+
+(define (unique-pairs n)
+  (flatmap (lambda (i)
+             (map (lambda (j) (list i j))
+                  (enumerate-interval 1 (- i 1))))
+           (enumerate-interval 1 n)))
+
+(define (prime? n)
+  (define max (floor (sqrt n)))
+  (define (check-prime k)
+    (cond ((> k max) true)
+          ((= (remainder n k) 0) false)
+          (else (check-prime (+ k 1)))))
+  (if (= n 1) false (check-prime 2)))
+
+(define (prime-sum-pairs n)
+  (define (prime-sum? pair) (prime? (+ (car pair) (cadr pair))))
+  (define (make-pair-sum pair) (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
+  (map make-pair-sum (filter prime-sum? (unique-pairs n))))
+
+(define (filter predicate seq)
+  (cond ((null? seq) nil)
+        ((predicate (car seq)) (cons (car seq) (filter predicate (cdr seq))))
+        (else (filter predicate (cdr seq)))))
+
+;2.41
+(define (triples-that-sum-to s n)
+  (filter (lambda (triple) (= s (+ (car triple)
+                                   (cadr triple)
+                                   (caddr triple))))
+          (enumerate-triples n)))
+
+(define (enumerate-triples n)
+  (flatmap (lambda (i)
+             (map (lambda (j)
+                    (map (lambda (k) (list i j k))
+                         (enumerate-interval 1 (- j 1))))
+                  (enumerate-interval 1 (- i 1))))
+           (enumerate-interval 1 n)))
+
+     
